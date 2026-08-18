@@ -1,0 +1,6 @@
+django>=4.2
+djangorestframework>=3.14
+djangorestframework-simplejwt>=5.3
+channels[daphne]>=4.0
+channels-redis>=4.1
+python-dotenv>=1.0.0
