@@ -5,9 +5,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-# ---------------------------------------------------------------------------
+
 # Paths
-# ---------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
@@ -17,9 +16,7 @@ try:
 except ImportError:
     pass
 
-# ---------------------------------------------------------------------------
 # Security
-# ---------------------------------------------------------------------------
 SECRET_KEY = os.environ.get(
     "SECRET_KEY",
     "django-insecure-change-me-in-production",
@@ -27,9 +24,7 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
 ALLOWED_HOSTS = ["*"]
 
-# ---------------------------------------------------------------------------
 # Installed Applications
-# ---------------------------------------------------------------------------
 INSTALLED_APPS = [
     "daphne",
     "django.contrib.admin",
@@ -46,9 +41,7 @@ INSTALLED_APPS = [
     "apps.chat",
 ]
 
-# ---------------------------------------------------------------------------
 # Middleware
-# ---------------------------------------------------------------------------
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -59,14 +52,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# ---------------------------------------------------------------------------
 # URL Configuration
-# ---------------------------------------------------------------------------
 ROOT_URLCONF = "config.urls"
 
-# ---------------------------------------------------------------------------
 # Templates
-# ---------------------------------------------------------------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -83,9 +72,7 @@ TEMPLATES = [
     },
 ]
 
-# ---------------------------------------------------------------------------
 # ASGI / Channels
-# ---------------------------------------------------------------------------
 ASGI_APPLICATION = "config.asgi.application"
 
 REDIS_URL = os.environ.get("REDIS_URL")
@@ -106,9 +93,8 @@ else:
         },
     }
 
-# ---------------------------------------------------------------------------
+
 # Database
-# ---------------------------------------------------------------------------
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -116,9 +102,7 @@ DATABASES = {
     }
 }
 
-# ---------------------------------------------------------------------------
 # Auth & Password Validation
-# ---------------------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -126,9 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# ---------------------------------------------------------------------------
 # REST Framework
-# ---------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -140,30 +122,22 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 50,
 }
 
-# ---------------------------------------------------------------------------
 # Simple JWT
-# ---------------------------------------------------------------------------
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# ---------------------------------------------------------------------------
 # Internationalization
-# ---------------------------------------------------------------------------
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# ---------------------------------------------------------------------------
 # Static Files
-# ---------------------------------------------------------------------------
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
-# ---------------------------------------------------------------------------
 # Default primary key field type
-# ---------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
