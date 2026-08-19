@@ -1,6 +1,14 @@
 # Real-Time Chat API & Web Application
 
-A production-grade, real-time messaging backend and web application built with **Django**, **Django REST Framework (DRF)**, **Django Channels** (WebSockets), and **Tailwind CSS**.
+A production-grade, real-time messaging backend and web application built with **Django**, **Django REST Framework (DRF)**, **Django Channels** (WebSockets), **Redis**, and **Tailwind CSS**.
+
+---
+
+## 🚀 Live Demo & Deployment
+
+- **Live Application URL**: [https://realtime-chat-cgmy.onrender.com](https://realtime-chat-cgmy.onrender.com)
+- **Live WebSocket URL**: `wss://realtime-chat-cgmy.onrender.com/ws/chat/<user_id>/?token=<jwt>`
+- **Live Notification Socket**: `wss://realtime-chat-cgmy.onrender.com/ws/notifications/?token=<jwt>`
 
 ---
 
