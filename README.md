@@ -63,8 +63,9 @@ A production-grade, real-time messaging backend and web application built with *
 | **REST API** | Django REST Framework | Auth & Chat History Endpoints |
 | **Authentication** | Simple JWT | JSON Web Token Access & Refresh Flow |
 | **Real-Time** | Django Channels | `AsyncJsonWebsocketConsumer` for WebSockets |
-| **Channel Layer** | InMemory / Redis | `InMemoryChannelLayer` (Dev) / `RedisChannelLayer` (Prod) |
-| **Database** | SQLite (Dev) | Relational Database with composite index |
+| **Channel Layer** | InMemory / Redis | `InMemoryChannelLayer` (Local) / `RedisChannelLayer` (Prod) |
+| **Database** | PostgreSQL / SQLite | PostgreSQL via Supabase/Render (Prod) & SQLite (Fallback/Tests) |
+| **Static Files** | WhiteNoise | Compressed & manifest static asset serving |
 | **ASGI Server** | Daphne | Async ASGI Server |
 | **Frontend** | Tailwind CSS v4 & Inter | Minimal, modern light white theme web UI |
 
@@ -302,3 +303,10 @@ python manage.py test apps.accounts apps.chat -v 2
 6. **Flexible Channel Layer (InMemory vs Redis)**:
    - Configured to use `InMemoryChannelLayer` out of the box for instant local development without external dependencies.
    - Defining `REDIS_URL` in `.env` seamlessly switches to `RedisChannelLayer`.
+
+7. **Production-Ready Database Strategy (PostgreSQL + SQLite Fallback)**:
+   - Automatically connects to PostgreSQL in production via `DATABASE_URL` (Supabase / Render) using `dj-database-url`.
+   - Seamlessly falls back to SQLite for local development and isolated in-memory test executions.
+
+8. **Strict Host & Origin Security**:
+   - Dynamically adapts to Render's deployed hostname (`RENDER_EXTERNAL_HOSTNAME`) to protect against HTTP Host Header Poisoning while maintaining strict CSRF origin verification.
