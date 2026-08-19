@@ -165,6 +165,40 @@ Open `http://localhost:8000/` in your browser to access the web application!
 
 ---
 
+## ☁️ Production Deployment Guide (Render + Supabase)
+
+This application is architected for production deployment on **Render** (ASGI Web Service + Redis Channel Layer) with a managed **Supabase PostgreSQL** database.
+
+### 1. Database Setup (Supabase PostgreSQL)
+1. Create a free project at [supabase.com](https://supabase.com/).
+2. Go to **Project Settings** → **Database** → **Connection String** → **URI**.
+3. Select **Session pooler** (IPv4 mode) and copy the connection URI:
+   ```text
+   postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+   ```
+
+### 2. Channel Layer Setup (Render Redis / Key Value)
+1. On Render Dashboard, click **New +** → **Key Value** (Redis).
+2. Name it: `chat-redis` (Plan: Free) and click **Create Key Value**.
+3. Copy the **Internal Key Value URL** (`redis://red-xxxx:6379`).
+
+### 3. Web Service Setup (Render)
+1. On Render Dashboard, click **New +** → **Web Service** → Connect your GitHub repository.
+2. Configure settings:
+   - **Runtime**: `Python 3`
+   - **Branch**: `main`
+   - **Build Command**: `pip install -r requirements.txt && python manage.py migrate`
+   - **Start Command**: `daphne -b 0.0.0.0 -p $PORT config.asgi:application`
+   - **Instance Type**: `Free`
+3. Configure Environment Variables:
+   - `SECRET_KEY`: *(Production secret key)*
+   - `DEBUG`: `False`
+   - `DATABASE_URL`: *(Your Supabase IPv4 Pooler URI from Step 1)*
+   - `REDIS_URL`: *(Your Render Internal Redis URL from Step 2)*
+   - `PYTHON_VERSION`: `3.12.0`
+
+---
+
 ## Web Application Routes
 
 | Route | Description |
