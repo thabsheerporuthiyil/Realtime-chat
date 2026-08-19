@@ -135,7 +135,29 @@
     let activeTargetId = null;
     let activeTargetUsername = null;
     let ws = null;
+    let notificationWs = null;
     let renderedMsgIds = new Set();
+
+    // Connect notification WebSocket immediately on page load
+    // This subscribes to user's personal group (user_<id>) so
+    // incoming messages trigger sidebar updates before any chat is opened
+    function connectNotificationSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/notifications/?token=${token}`;
+        notificationWs = new WebSocket(wsUrl);
+
+        notificationWs.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'chat_message') {
+                handleIncomingMessage(data.message);
+            }
+        };
+
+        notificationWs.onclose = () => {
+            // Reconnect after 3 seconds if disconnected
+            setTimeout(connectNotificationSocket, 3000);
+        };
+    }
 
     // Fetch User List via REST API
     async function fetchUsers() {
@@ -258,6 +280,38 @@
         }
     }
 
+    // Shared handler for incoming messages from both notification and chat WebSockets
+    function handleIncomingMessage(msg) {
+        // Identify other user in conversation
+        const otherUserId = (msg.sender === currentUsername) ? msg.receiver_id : msg.sender_id;
+        const userObj = allUsers.find(u => u.id === otherUserId || u.username === msg.sender);
+
+        if (userObj) {
+            userObj.last_message_time = msg.timestamp;
+
+            // If message is from someone else and their chat is NOT currently active
+            if (msg.sender !== currentUsername && activeTargetId !== userObj.id) {
+                userObj.unread_count = (userObj.unread_count || 0) + 1;
+            }
+            
+            // Re-sort users so recent chatter appears on top!
+            sortUsers();
+            renderUserList(allUsers);
+        }
+
+        // If message belongs to current active chat window, render it
+        if (activeTargetId && (msg.sender_id === activeTargetId || msg.sender === activeTargetUsername || msg.sender === currentUsername)) {
+            if (!renderedMsgIds.has(msg.id)) {
+                renderedMsgIds.add(msg.id);
+                const placeholder = document.getElementById('messages-container').querySelector('.text-center');
+                if (placeholder) placeholder.remove();
+
+                appendMessage(msg);
+                scrollToBottom();
+            }
+        }
+    }
+
     function connectWebSocket(targetId) {
         if (ws) {
             ws.close();
@@ -276,36 +330,7 @@
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.type === 'chat_message') {
-                const msg = data.message;
-
-                // Identify other user in conversation
-                const otherUserId = (msg.sender === currentUsername) ? msg.receiver_id : msg.sender_id;
-                const userObj = allUsers.find(u => u.id === otherUserId || u.username === msg.sender);
-
-                if (userObj) {
-                    userObj.last_message_time = msg.timestamp;
-
-                    // If message is from someone else and their chat is NOT currently active
-                    if (msg.sender !== currentUsername && activeTargetId !== userObj.id) {
-                        userObj.unread_count = (userObj.unread_count || 0) + 1;
-                    }
-                    
-                    // Re-sort users so recent chatter appears on top!
-                    sortUsers();
-                    renderUserList(allUsers);
-                }
-
-                // If message belongs to current active chat window
-                if (activeTargetId && (msg.sender_id === activeTargetId || msg.sender === activeTargetUsername || msg.sender === currentUsername)) {
-                    if (!renderedMsgIds.has(msg.id)) {
-                        renderedMsgIds.add(msg.id);
-                        const placeholder = document.getElementById('messages-container').querySelector('.text-center');
-                        if (placeholder) placeholder.remove();
-
-                        appendMessage(msg);
-                        scrollToBottom();
-                    }
-                }
+                handleIncomingMessage(data.message);
             }
         };
 
@@ -380,5 +405,6 @@
 
     // Initial load
     fetchUsers();
+    connectNotificationSocket();
 </script>
 {% endblock %}

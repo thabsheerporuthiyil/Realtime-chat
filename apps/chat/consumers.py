@@ -157,3 +157,44 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     def _user_exists(self, user_id):
         """Check if a user with the given ID exists."""
         return User.objects.filter(pk=user_id).exists()
+
+
+class NotificationConsumer(AsyncJsonWebsocketConsumer):
+    """
+    Lightweight WebSocket consumer for real-time sidebar notifications.
+
+    Connects on page load and subscribes to the user's personal
+    notification group (user_<id>). This ensures incoming messages
+    trigger unread badge updates even before any chat is selected.
+
+    URL pattern: ws/notifications/?token=<jwt>
+    """
+
+    async def connect(self):
+        """Authenticate and join personal notification group."""
+        self.user = self.scope.get("user")
+
+        if not self.user or not self.user.is_authenticated:
+            await self.close(code=4001)
+            return
+
+        self.user_group = f"user_{self.user.id}"
+        await self.channel_layer.group_add(self.user_group, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        """Leave personal notification group."""
+        if hasattr(self, "user_group"):
+            await self.channel_layer.group_discard(
+                self.user_group, self.channel_name
+            )
+
+    async def chat_message(self, event):
+        """Forward incoming message notifications to the client."""
+        await self.send_json(
+            {
+                "type": "chat_message",
+                "message": event["message"],
+            }
+        )
+

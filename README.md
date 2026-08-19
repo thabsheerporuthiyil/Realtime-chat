@@ -187,7 +187,7 @@ Open `http://localhost:8000/` in your browser to access the web application!
 
 ## Real-Time WebSocket API
 
-### Connection URL
+### Chat WebSocket (Direct Messaging)
 
 ```
 ws://localhost:8000/ws/chat/<target_user_id>/?token=<jwt_access_token>
@@ -195,6 +195,15 @@ ws://localhost:8000/ws/chat/<target_user_id>/?token=<jwt_access_token>
 
 - `target_user_id`: The ID of the recipient user.
 - `token`: Valid JWT access token passed via query parameters during handshake.
+
+### Notification WebSocket (Sidebar Updates)
+
+```
+ws://localhost:8000/ws/notifications/?token=<jwt_access_token>
+```
+
+- Auto-connects on page load to subscribe to the user's personal notification group.
+- Receives real-time message events for unread badge updates and sidebar sorting, even before any chat is opened.
 
 ### Message Payload Formats
 
@@ -269,15 +278,19 @@ python manage.py test apps.accounts apps.chat -v 2
 1. **Async WebSocket Consumer (`AsyncJsonWebsocketConsumer`)**:
    - Handles connection lifecycle asynchronously. Uses `database_sync_to_async` for non-blocking ORM operations.
 
-2. **Deterministic Channel Group Names**:
+2. **Dual WebSocket Architecture (Chat + Notification)**:
+   - `ChatConsumer` (`ws/chat/<user_id>/`) handles direct messaging and joins both the conversation room group and user's personal notification group.
+   - `NotificationConsumer` (`ws/notifications/`) is a lightweight consumer that auto-connects on page load, subscribing the user to their personal group (`user_<id>`) so incoming messages trigger sidebar updates immediately — even before any chat is selected.
+
+3. **Deterministic Channel Group Names**:
    - Room names are computed as `chat_{min(id1, id2)}_{max(id1, id2)}`. This guarantees that User A chatting with User B and User B chatting with User A land in the exact same channel group.
 
-3. **Query String JWT Authentication**:
+4. **Query String JWT Authentication**:
    - Web Browsers cannot send custom HTTP headers during a WebSocket handshake. The custom `JWTAuthMiddleware` parses the `token` query parameter, decodes the JWT, and attaches the authenticated user to the ASGI scope.
 
-4. **Sender Spoofing Protection**:
+5. **Sender Spoofing Protection**:
    - Sender identity is always extracted from the validated JWT scope, never from the WebSocket payload, preventing user impersonation.
 
-5. **Flexible Channel Layer (InMemory vs Redis)**:
+6. **Flexible Channel Layer (InMemory vs Redis)**:
    - Configured to use `InMemoryChannelLayer` out of the box for instant local development without external dependencies.
    - Defining `REDIS_URL` in `.env` seamlessly switches to `RedisChannelLayer`.
