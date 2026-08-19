@@ -111,10 +111,19 @@ else:
     }
 
 
-# Database (PostgreSQL in production via DATABASE_URL, SQLite fallback for local development)
+# Database (PostgreSQL in production/dev via DATABASE_URL, SQLite for tests & fallback)
+import sys
+
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-if DATABASE_URL:
+if "test" in sys.argv:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
+    }
+elif DATABASE_URL:
     try:
         import dj_database_url
         DATABASES = {
