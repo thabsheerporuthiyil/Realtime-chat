@@ -22,12 +22,23 @@ SECRET_KEY = os.environ.get(
     "django-insecure-change-me-in-production",
 )
 DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
-ALLOWED_HOSTS = ["*"]
+# Security & Hosts
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.onrender.com",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
+
+# Allow custom ALLOWED_HOSTS from environment
+custom_hosts = os.environ.get("ALLOWED_HOSTS")
+if custom_hosts:
+    ALLOWED_HOSTS.extend([h.strip() for h in custom_hosts.split(",") if h.strip()])
+
+# Automatically adapt to Render's deployed hostname
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 # Installed Applications
 INSTALLED_APPS = [
